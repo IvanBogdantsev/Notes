@@ -7,24 +7,23 @@
 
 import UIKit
 
-protocol NoteDetailViewPresenterProtocol: AnyObject {
-    func setDetailViewDelegate(delegate: NotesDetailViewDelegate?)
+protocol NoteDetailViewPresenterProtocol: AnyObject {///used to interact with presenter
     func save(note: NoteModel)
     func update(at index: Int, with note: NoteModel)
     func delete(at indexPath: IndexPath)
 }
-
-class NoteDetailView: UIViewController, NotesDetailViewDelegate, UITextViewDelegate {
-    
+//MARK: Text input scene. Manages text layout and some basic saving/updating/deleting logic
+class NoteDetailView: UIViewController, UITextViewDelegate {
+    //private props
     private let presenter: NoteDetailViewPresenterProtocol = NotesViewPresenter.shared
     
     private let resolver = SavingResolver()
         
-    private var index: Int?
+    private var indexPath: IndexPath?///nil if new note is being created
     
     private var didEditNote = false
     
-    private var isEditingTitle: Bool {
+    private var isEditingTitle: Bool {///true if user input is being added to the first line of TextView
         get {
             return firstLineRange.contains(textView.selectedRange.upperBound-1)
         }
@@ -48,13 +47,13 @@ class NoteDetailView: UIViewController, NotesDetailViewDelegate, UITextViewDeleg
         textView.typingAttributes = [.font : UIFont.boldSystemFont(ofSize: 30), .foregroundColor : UIColor.label]
         return textView
     }()
-    
-    convenience init(index: Int, attributed: NSAttributedString) {
+    //convenience init used to load existing note. See 'didSelectNote' of presenter
+    convenience init(indexPath: IndexPath, attributed: NSAttributedString) {
         self.init()
-        self.index = index
+        self.indexPath = indexPath
         self.textView.attributedText = attributed
     }
-    
+    //lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -62,8 +61,30 @@ class NoteDetailView: UIViewController, NotesDetailViewDelegate, UITextViewDeleg
         setUpConstraints()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        guard indexPath == nil else { return }
+        textView.becomeFirstResponder()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        guard didEditNote else { return }
+        guard let note = resolver.transformIntoSavableObject(components: lines, attributed: textView.attributedText) else { return }
+        saveOrUpdate(note: note)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        guard didEditNote else { return }
+        guard let indexPath = self.indexPath, textView.text.isEmpty else { return }
+        presenter.delete(at: indexPath)///deletes note, if note existed and its text was removed
+    }
+    //configure elements
     private func selfSetUp() {
-        presenter.setDetailViewDelegate(delegate: self)
         textView.delegate = self
         view.backgroundColor = .systemBackground
         view.addSubview(textView)
@@ -78,35 +99,21 @@ class NoteDetailView: UIViewController, NotesDetailViewDelegate, UITextViewDeleg
             textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
     }
-    
-    private func saveOrUpdate() {
-        guard didEditNote else { return }
-        guard let note = resolver.transformIntoSavableObject(components: lines, attributed: textView.attributedText) else { return }
-        if let index = self.index {
-         presenter.update(at: index, with: note)
+    //saveOrUpdate func decides whether to save a new note or update an existing one
+    private func saveOrUpdate(note: NoteModel) {
+        if let indexPath = self.indexPath {
+            presenter.update(at: indexPath.row, with: note)
+            return
         }
         presenter.save(note: note)
     }
-    
+    //textViewDidChangeSelection func manages text layout - the first line is in bold, others are in regular
     func textViewDidChangeSelection(_ textView: UITextView) {
         textView.typingAttributes = isEditingTitle ?
         [.font : UIFont.boldSystemFont(ofSize: 30), .foregroundColor : UIColor.label] :
         [.font : UIFont.systemFont(ofSize: 18), .foregroundColor : UIColor.label]
         guard !didEditNote else { return }
         didEditNote.toggle()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        guard index == nil else { return }
-        textView.becomeFirstResponder()
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) { //распихать по функциям
-        super.viewWillDisappear(animated)
-        
-        saveOrUpdate()
     }
     
 }

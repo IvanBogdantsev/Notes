@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+//MARK: Keys for NSManagedObject values
 enum Keys: String {
     case title, subtitle, date, attributedString
 }

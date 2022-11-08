@@ -8,16 +8,16 @@
 import UIKit
 import CoreData
 
-protocol NotesViewPresenterProtocol: AnyObject {
+protocol NotesViewPresenterProtocol: AnyObject {///used to interact with presenter
     var dataSource: [NSManagedObject] { get }
     func setListViewDelegate(delegate: NotesViewDelegate?)
     func loadData()
-    func didSelectNote(at: Int)
+    func didSelectNote(at indexPath: IndexPath)
     func delete(at indexPath: IndexPath)
 }
-
+//MARK: View with table for notes. Mimicks native 'Notes' UI 
 class NotesListView: UIViewController, NotesViewDelegate {
-    
+    //private props
     private let presenter: NotesViewPresenterProtocol = NotesViewPresenter.shared
     
     private let dateConverter = DateConverter()
@@ -42,7 +42,7 @@ class NotesListView: UIViewController, NotesViewDelegate {
         label.textColor = .label
         return label
     }()
-    
+    //lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -58,7 +58,7 @@ class NotesListView: UIViewController, NotesViewDelegate {
             tableView.deselectRow(at: selectedIndexPath, animated: animated)
         }
     }
-    
+    //configuring the elements
     private func selfSetUp() {
         presenter.setListViewDelegate(delegate: self)
         presenter.loadData()
@@ -92,7 +92,7 @@ class NotesListView: UIViewController, NotesViewDelegate {
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-    
+    //private funcs
     private func configure(cell: inout UITableViewCell, for indexPath: IndexPath) {
         let note = presenter.dataSource[indexPath.row]
         let date = dateConverter.convert(date: note.getDate)
@@ -106,7 +106,7 @@ class NotesListView: UIViewController, NotesViewDelegate {
     @objc private func didTapAddNoteButton(sender: UIBarButtonItem?) {
         navigationController?.pushViewController(NoteDetailView(), animated: true)
     }
-    
+    //interaction with presenter
     func reloadTableView() {
         tableView.reloadData()
     }
@@ -151,7 +151,7 @@ extension NotesListView: UITableViewDataSource {
 extension NotesListView: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        presenter.didSelectNote(at: indexPath.row)
+        presenter.didSelectNote(at: indexPath)
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {

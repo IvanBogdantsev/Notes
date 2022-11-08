@@ -7,9 +7,8 @@
 
 import Foundation
 import CoreData
-
-extension NSManagedObject {
-    
+//MARK: NSAttributedString extension to give easier acces to entity's attributes
+extension NSManagedObject {///refactoring note: creating a specific object such as 'ManagedNote' subclassed from NSManagedObject would be more suitable and futureproof solution
     var getTitle: String {
         get {
             let title = self.value(forKey: Keys.title.rawValue) as? String ?? String()
@@ -39,7 +38,10 @@ extension NSManagedObject {
     }
     
     func create(with note: NoteModel) {
-        self.setValuesForKeys([Keys.title.rawValue : note.title, Keys.subtitle.rawValue : note.subTitle, Keys.date.rawValue : note.date, Keys.attributedString.rawValue : note.attributed])
+        self.setValuesForKeys([Keys.title.rawValue : note.title,
+                               Keys.subtitle.rawValue : note.subTitle,
+                               Keys.date.rawValue : note.date,
+                               Keys.attributedString.rawValue : note.attributed])
     }
     
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 import UIKit
-
+//MARK: UIListContentConfiguration for UITableView cell used in 'NotesListView'
 extension UIListContentConfiguration {
     
     public mutating func noteConfiguration(title: String, subtitle: String, date: String) {

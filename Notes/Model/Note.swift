@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+//MARK: NoteModel 
 struct NoteModel {
     let title: String
     let subTitle: String

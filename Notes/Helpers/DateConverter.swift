@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+//MARK: Creates a String from provided Date instance.
 struct DateConverter {
     
     private let dateFormatter = DateFormatter()
@@ -32,7 +32,7 @@ struct DateConverter {
         
         dateFormatter.dateFormat = "dd.MM.yyyy"
         
-        return dateFormatter.string(from: date)
+        return dateFormatter.string(from: date)///default String in the indicated format. Returned if Date is older than a week
     }
     
 }

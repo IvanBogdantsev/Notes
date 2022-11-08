@@ -8,8 +8,8 @@
 import Foundation
 import UIKit
 import CoreData
-
-class CoreDataManager {//подписать на протокол
+//MARK: Manages loading, saving, updating and deleting data
+class CoreDataManager: CoreDataManagerProtocol {
     
     private let entityName = "Note"
     
@@ -23,7 +23,7 @@ class CoreDataManager {//подписать на протокол
         
         do {
             let fetched = try managedObjectContext.fetch(fetchRequest)
-            callback(fetched)
+            callback(fetched)///the closure populates the array of ManagedObjects. See 'NotesViewPresenter' file
         } catch let error as NSError {
             print("Something went wrong while loading the data:\n \(error)\n, \(error.userInfo)")
         }
@@ -36,11 +36,11 @@ class CoreDataManager {//подписать на протокол
         let note = NSManagedObject(entity: entity,
                                    insertInto: managedObjectContext)
         
-        note.create(with: newNote)
+        note.create(with: newNote)///creates a new instance from a NoteModel. See 'Extensions' --> 'ManagedObject'
         
         do {
             try managedObjectContext.save()
-            callback(note)
+            callback(note)///appeding a new object to the array of ManagedObjects
         } catch let error as NSError {
             print("Something went wrong while saving the data:\n \(error)\n, \(error.userInfo)")
         }
@@ -51,7 +51,7 @@ class CoreDataManager {//подписать на протокол
         
         do {
             try managedObjectContext.save()
-            callback(object)
+            callback(object)///updating exisitng value
         } catch let error as NSError {
             print("Something went wrong while saving the data:\n \(error)\n, \(error.userInfo)")
         }
@@ -66,4 +66,5 @@ class CoreDataManager {//подписать на протокол
             print("Something went wrong while deleting the data:\n \(error)\n, \(error.userInfo)")
         }
     }
+    
 }

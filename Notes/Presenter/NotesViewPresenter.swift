@@ -8,41 +8,40 @@
 import Foundation
 import CoreData
 
-protocol NotesViewDelegate: AnyObject {
+protocol NotesViewDelegate: AnyObject {///used to interact with 'NotesListView'
     func reloadTableView()
     func pushDetailView(controller: NoteDetailView)
     func deleteRows(at indexPath: [IndexPath])
     func refreshCounter(count: String)
 }
 
-protocol NotesDetailViewDelegate: AnyObject {}
+protocol CoreDataManagerProtocol: AnyObject {///used to interact with 'CoreDataManager'
+    func load(callback: ([NSManagedObject]) -> Void)
+    func save(newNote: NoteModel, callback: (NSManagedObject) -> Void)
+    func update(update object: NSManagedObject, with note: NoteModel, callback: (NSManagedObject) -> Void)
+    func delete(object: NSManagedObject)
+}
 
 class NotesViewPresenter: NotesViewPresenterProtocol, NoteDetailViewPresenterProtocol {
-    
+    //singletone pattern is used as presenter is also a data source
     static let shared = NotesViewPresenter(coreDataManager: CoreDataManager())
     
-    private let coreDataManager: CoreDataManager
+    private let coreDataManager: CoreDataManagerProtocol
     
+    private init(coreDataManager: CoreDataManagerProtocol) {
+        self.coreDataManager = coreDataManager
+    }
+    //interacting with delegate
     weak private var notesViewDelegate: NotesViewDelegate?
-    
-    weak private var notesDetailViewDelegate: NotesDetailViewDelegate?
-    
+        
     var dataSource: [NSManagedObject] = [] {
         didSet {
             dataSource.sort {$0.getDate > $1.getDate}
         }
     }
     
-    private init(coreDataManager: CoreDataManager) {
-        self.coreDataManager = coreDataManager
-    }
-    
     func setListViewDelegate(delegate: NotesViewDelegate?) {
         notesViewDelegate = delegate
-    }
-    
-    func setDetailViewDelegate(delegate: NotesDetailViewDelegate?) {
-        notesDetailViewDelegate = delegate
     }
     
     func loadData() {
@@ -74,10 +73,9 @@ class NotesViewPresenter: NotesViewPresenterProtocol, NoteDetailViewPresenterPro
         refreshCounter()
     }
     
-    
-    func didSelectNote(at index: Int) {
-        let note = dataSource[index]
-        let detailView = NoteDetailView(index: index, attributed: note.getAttributed)
+    func didSelectNote(at indexPath: IndexPath) {
+        let note = dataSource[indexPath.row]
+        let detailView = NoteDetailView(indexPath: indexPath, attributed: note.getAttributed)
         notesViewDelegate?.pushDetailView(controller: detailView)
     }
     
@@ -88,7 +86,7 @@ class NotesViewPresenter: NotesViewPresenterProtocol, NoteDetailViewPresenterPro
         case 1: count = "1 Note"
         default: count = "\(dataSource.count) Notes"
         }
-        notesViewDelegate?.refreshCounter(count: count)
+        notesViewDelegate?.refreshCounter(count: count)///refresh the notes count in 'NotesListView' toolbar
     }
     
 }
